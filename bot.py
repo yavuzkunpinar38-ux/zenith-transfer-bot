@@ -95,25 +95,32 @@ def pdf_uret(data, bilet_no):
     box_color = colors.HexColor("#161616")
     gold_color = colors.HexColor("#d4af37")
     
+    # Türkçe karakter problemi yaşamamak için varsayılan Helvetica fontunu kullanıyoruz
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle('TitleStyle', parent=styles['Heading1'], fontSize=28, textColor=colors.black, leading=32)
-    sub_style = ParagraphStyle('SubStyle', parent=styles['Normal'], fontSize=16, textColor=gold_color, leading=20, spaceAfter=20)
-    label_style = ParagraphStyle('LabelStyle', parent=styles['Normal'], fontSize=9, textColor=gold_color, leading=12)
-    value_style = ParagraphStyle('ValueStyle', parent=styles['Normal'], fontSize=12, textColor=colors.white, leading=16)
+    title_style = ParagraphStyle('TitleStyle', fontName='Helvetica-Bold', fontSize=28, textColor=colors.black, leading=32)
+    sub_style = ParagraphStyle('SubStyle', fontName='Helvetica', fontSize=16, textColor=gold_color, leading=20, spaceAfter=20)
+    label_style = ParagraphStyle('LabelStyle', fontName='Helvetica-Bold', fontSize=9, textColor=gold_color, leading=12)
+    value_style = ParagraphStyle('ValueStyle', fontName='Helvetica', fontSize=12, textColor=colors.white, leading=16)
     
     story.append(Paragraph("<b>ZENITH</b>", title_style))
     story.append(Paragraph("TRANSFER", sub_style))
     story.append(Spacer(1, 15))
     
+    # Türkçe karakterleri İngilizce karşılıklarına dönüştüren küçük bir temizlik yapıyoruz
+    def tr_temizle(metin):
+        if not metin: return ""
+        ceviriler = str.maketrans("çğıöşüÇĞİÖŞÜ", "cgiosuCGIOSU")
+        return str(metin).translate(ceviriler)
+    
     table_data = [
-        [Paragraph("<b>BILET NO / TICKET NO</b>", label_style), Paragraph("<b>TARİH / DATE</b>", label_style)],
-        [Paragraph(bilet_no, value_style), Paragraph(data['tarih'], value_style)],
-        [Paragraph("<b>ALINIŞ SAATİ / PICKUP TIME</b>", label_style), Paragraph("<b>ARAÇ TİPİ / VEHICLE</b>", label_style)],
-        [Paragraph(data['saat'], value_style), Paragraph("Minivan VIP (Mercedes Vito)", value_style)],
-        [Paragraph("<b>ALINIŞ NOKTASI / PICKUP</b>", label_style), Paragraph("<b>BIRAKILIŞ NOKTASI / DROPOFF</b>", label_style)],
-        [Paragraph(data['nereden'], value_style), Paragraph(data['nereye'], value_style)],
-        [Paragraph("<b>YOLCU / PASSENGER</b>", label_style), Paragraph("<b>TOPLAM FİYAT / PRICE</b>", label_style)],
-        [Paragraph(data['yolcu'], value_style), Paragraph(data['fiyat'], value_style)]
+        [Paragraph("<b>BILET NO / TICKET NO</b>", label_style), Paragraph("<b>TARiH / DATE</b>", label_style)],
+        [Paragraph(tr_temizle(bilet_no), value_style), Paragraph(tr_temizle(data['tarih']), value_style)],
+        [Paragraph("<b>ALINIS SAATi / PICKUP TIME</b>", label_style), Paragraph("<b>ARAC TiPi / VEHICLE</b>", label_style)],
+        [Paragraph(tr_temizle(data['saat']), value_style), Paragraph("Minivan VIP (Mercedes Vito)", value_style)],
+        [Paragraph("<b>ALINIS NOKTASI / PICKUP</b>", label_style), Paragraph("<b>BIRAKILIS NOKTASI / DROPOFF</b>", label_style)],
+        [Paragraph(tr_temizle(data['nereden']), value_style), Paragraph(tr_temizle(data['nereye']), value_style)],
+        [Paragraph("<b>YOLCU / PASSENGER</b>", label_style), Paragraph("<b>TOPLAM FiYAT / PRICE</b>", label_style)],
+        [Paragraph(tr_temizle(data['yolcu']), value_style), Paragraph(tr_temizle(data['fiyat']), value_style)]
     ]
     
     t = Table(table_data, colWidths=[270, 270])

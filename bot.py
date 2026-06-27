@@ -80,7 +80,6 @@ async def nereye_al(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return FIYAT
 
 async def fiyat_al(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data['fiyat'] = update.message.text
     keyboard = [
         [InlineKeyboardButton("2 Saat Kala ⏰", callback_data='2'), InlineKeyboardButton("6 Saat Kala ⏰", callback_data='6')],
         [InlineKeyboardButton("12 Saat Kala ⏰", callback_data='12'), InlineKeyboardButton("24 Saat Kala ⏰", callback_data='24')]
@@ -139,7 +138,7 @@ async def hatirlatma_tetikle(context: ContextTypes.DEFAULT_TYPE):
     
     mesaj = f"🚨 **YOLCULUK HATIRLATMASI!**\n\n👤 **Yolcu:** {data['yolcu']}\n⏰ **Kalan:** {data['secilen_saat']} Saat\n📍 **Güzergah:** {data['nereden']} ➔ {data['nereye']}"
     await context.bot.send_document(chat_id=job.chat_id, document=pdf_file, caption=mesaj)
-
+TOKEN = "8868589463:AAGo8cRP4pHquYnDmpQtKIXWM5kvoEvVMPM"
 async def hatirlatma_sec(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -204,19 +203,16 @@ async def start_web_server():
     app.router.add_get('/', handle)
     runner = web.AppRunner(app)
     await runner.setup()
-    # Render PORT çevre değişkenini otomatik atar, yoksa 10000 kullanırız
     port = int(os.getenv("PORT", 10000))
     site = web.TCPSite(runner, '0.0.0.0', port)
     await site.start()
     print(f" Web sunucusu {port} portunda başlatıldı.")
 
 async def main():
-    TOKEN = os.getenv("TELEGRAM_TOKEN", "BURAYA_BOT_TOKEN_GELECEK")
+    # BotFather'dan aldığın yeni temiz şifreyi aşağıdaki iki tırnağın arasına yapıştır!
+    TOKEN = "BURAYA_YENI_ALDIGIN_TOKEN_GELECEK"
     
-    # Web sunucusunu arka planda başlat
     await start_web_server()
-    
-    # Telegram Botunu başlat
     app = Application.builder().token(TOKEN).build()
     
     conv_handler = ConversationHandler(
@@ -237,15 +233,12 @@ async def main():
     app.add_handler(CommandHandler("gecmis", gecmis_isler))
     app.add_handler(conv_handler)
     
-    # run_polling yerine asyncio uyumlu döngüyü kuruyoruz
     await app.initialize()
     await app.start()
     await app.updater.start_polling()
     
-    # Sonsuz döngüde çalışmaya devam etmesi için
     while True:
         await asyncio.sleep(3600)
 
 if __name__ == '__main__':
-    # Render asenkron yapıyı tetiklemek için loop kullanırız
     asyncio.run(main())

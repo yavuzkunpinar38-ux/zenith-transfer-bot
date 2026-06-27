@@ -166,11 +166,21 @@ async def hatirlatma_sec(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn.commit()
     conn.close()
 
-    pdf_bytes = pdf_uret(data, bilet_no)
-    pdf_file = io.BytesIO(pdf_bytes)
-    pdf_file.name = f"Zenith_Transfer_{bilet_no}.pdf"
-    
-    await context.bot.send_document(chat_id=query.message.chat_id, document=pdf_file, caption="✨ **Biletiniz üretildi!**")
+    # PDF uretimini garantiye alalim
+    try:
+        pdf_bytes = pdf_uret(data, bilet_no)
+        pdf_file = io.BytesIO(pdf_bytes)
+        pdf_file.name = f"Bilet_{bilet_no}.pdf"
+        
+        # PDF'i gonder
+        await context.bot.send_document(
+            chat_id=query.message.chat_id, 
+            document=pdf_file, 
+            caption="✨ **Zenith VIP Transfer Biletiniz:**"
+        )
+    except Exception as e:
+        await query.message.reply_text(f"PDF oluşturulurken hata: {str(e)}")
+        logging.error(f"PDF hatasi: {e}")
     
     try:
         transfer_str = f"{data['tarih']} {data['saat']}"

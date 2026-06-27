@@ -138,7 +138,7 @@ async def hatirlatma_tetikle(context: ContextTypes.DEFAULT_TYPE):
     
     mesaj = f"🚨 **YOLCULUK HATIRLATMASI!**\n\n👤 **Yolcu:** {data['yolcu']}\n⏰ **Kalan:** {data['secilen_saat']} Saat\n📍 **Güzergah:** {data['nereden']} ➔ {data['nereye']}"
     await context.bot.send_document(chat_id=job.chat_id, document=pdf_file, caption=mesaj)
-TOKEN = "8868589463:AAGo8cRP4pHquYnDmpQtKIXWM5kvoEvVMPM"
+
 async def hatirlatma_sec(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -210,7 +210,7 @@ async def start_web_server():
 
 async def main():
     # BotFather'dan aldığın yeni temiz şifreyi aşağıdaki iki tırnağın arasına yapıştır!
-    TOKEN = "BURAYA_YENI_ALDIGIN_TOKEN_GELECEK"
+    TOKEN = "8868589463:AAGo8cRP4pHquYnDmpQtKIXWM5kvoEvVMPM"
     
     await start_web_server()
     app = Application.builder().token(TOKEN).build()

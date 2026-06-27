@@ -3,6 +3,8 @@ import datetime
 import io
 import sqlite3
 import os
+import asyncio
+from aiohttp import web
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler, CallbackQueryHandler
 from reportlab.lib.pagesizes import letter
@@ -86,29 +88,24 @@ async def fiyat_al(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🔔 **Yolculuğa kaç saat kala hatırlatma istersiniz?**", reply_markup=InlineKeyboardMarkup(keyboard))
     return HATIRLATMA
 
-# ReportLab ile Lüks Siyah-Altın PDF Üretimi
 def pdf_uret(data, bilet_no):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
     story = []
     
-    # Özel lüks renk kodlarımız (Siyah arka plan, altın metinler)
-    bg_color = colors.HexColor("#0b0b0b")
     box_color = colors.HexColor("#161616")
     gold_color = colors.HexColor("#d4af37")
     
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle('TitleStyle', parent=styles['Heading1'], fontSize=28, textColor=colors.white, leading=32)
+    title_style = ParagraphStyle('TitleStyle', parent=styles['Heading1'], fontSize=28, textColor=colors.black, leading=32)
     sub_style = ParagraphStyle('SubStyle', parent=styles['Normal'], fontSize=16, textColor=gold_color, leading=20, spaceAfter=20)
     label_style = ParagraphStyle('LabelStyle', parent=styles['Normal'], fontSize=9, textColor=gold_color, leading=12)
     value_style = ParagraphStyle('ValueStyle', parent=styles['Normal'], fontSize=12, textColor=colors.white, leading=16)
     
-    # Başlık Alanı
     story.append(Paragraph("<b>ZENITH</b>", title_style))
     story.append(Paragraph("TRANSFER", sub_style))
     story.append(Spacer(1, 15))
     
-    # Detay Tablosu Verileri
     table_data = [
         [Paragraph("<b>BILET NO / TICKET NO</b>", label_style), Paragraph("<b>TARİH / DATE</b>", label_style)],
         [Paragraph(bilet_no, value_style), Paragraph(data['tarih'], value_style)],
@@ -123,7 +120,6 @@ def pdf_uret(data, bilet_no):
     t = Table(table_data, colWidths=[270, 270])
     t.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), box_color),
-        ('TEXTCOLOR', (0,0), (-1,-1), colors.white),
         ('ALIGN', (0,0), (-1,-1), 'LEFT'),
         ('PADDING', (0,0), (-1,-1), 12),
         ('BOTTOMPADDING', (0,0), (-1,-1), 14),
@@ -199,8 +195,28 @@ async def gecmis_isler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def iptal(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
-def main():
+# Render'ı memnun edecek sahte web sunucusu (Port dinleyici)
+async def handle(request):
+    return web.Response(text="Zenith Bot is alive!")
+
+async def start_web_server():
+    app = web.Application()
+    app.router.add_get('/', handle)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    # Render PORT çevre değişkenini otomatik atar, yoksa 10000 kullanırız
+    port = int(os.getenv("PORT", 10000))
+    site = web.TCPSite(runner, '0.0.0.0', port)
+    await site.start()
+    print(f" Web sunucusu {port} portunda başlatıldı.")
+
+async def main():
     TOKEN = os.getenv("TELEGRAM_TOKEN", "BURAYA_BOT_TOKEN_GELECEK")
+    
+    # Web sunucusunu arka planda başlat
+    await start_web_server()
+    
+    # Telegram Botunu başlat
     app = Application.builder().token(TOKEN).build()
     
     conv_handler = ConversationHandler(
@@ -221,7 +237,15 @@ def main():
     app.add_handler(CommandHandler("gecmis", gecmis_isler))
     app.add_handler(conv_handler)
     
-    app.run_polling()
+    # run_polling yerine asyncio uyumlu döngüyü kuruyoruz
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling()
+    
+    # Sonsuz döngüde çalışmaya devam etmesi için
+    while True:
+        await asyncio.sleep(3600)
 
 if __name__ == '__main__':
-    main()
+    # Render asenkron yapıyı tetiklemek için loop kullanırız
+    asyncio.run(main())
